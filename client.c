@@ -133,7 +133,10 @@ int main(int argc, char *argv[])
     // char requestHostAddress[] = URL;
 
     // Make our request
-    sprintf(request, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", subdirectory, domain);
+    sprintf(request, 
+    "GET %s HTTP/1.1\r\n"
+    "Host: %s\r\n\r\n",
+     subdirectory, domain);
 
     printf("%s", request);
 
@@ -141,7 +144,7 @@ int main(int argc, char *argv[])
     // Send request
     // IS this an actual HTTP request? I didn't have to use the IP address, I didn't have to request any file
     // sendto(server_port, request, 1000, 0, p, actual_length);
-    rc = send(server_port, request, actual_length, 0);
+    rc = send(sock, request, actual_length, 0);
     checkError(rc);
     printf("Request Length: %d\n", actual_length);
     // If we requested timer:
@@ -157,7 +160,7 @@ int main(int argc, char *argv[])
     char response[1000];
 
     // Receive response
-    rc = recv(server_port, response, response_size, 0);
+    rc = recv(sock, response, response_size, 0);
     checkError(rc);
     printf("Response length: %d\n", rc);
     printf("Response: %s\n", response);

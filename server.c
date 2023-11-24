@@ -77,7 +77,8 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
     char httpRequest[1000];
     // if HTTP request is good
     recv(clntSocket, httpRequest, 1000, 0);
-    printf("HTTP Request: %s\n", httpRequest);
+    printf("HTTP Request:\n"
+     "%s\n", httpRequest);
     // WHAT separates an HTTP request/response from just text?
     char buffer[1024] = "HTTP/1.1 200 OK\n";
     // if there is a file request:
