@@ -13,25 +13,24 @@
 #include <sys/wait.h>
 #include <ctype.h>
 // #include <find.hpp>
+
 #define RCVBUFSIZE 32                  /* Size of receive buffer */
+
 void DieWithError(char *errorMessage); /* Error handling function */
-// int getCharacterIndex(char* string, char delim);
+void checkError(int rc);
 
 int main(int argc, char *argv[])
 {
     int sock;                        /* Socket descriptor */
     struct sockaddr_in echoServAddr; /* Echo server address */
     unsigned short servPort;         /* Echo server port */
+    char *server_port;             /* Allows us to enter the server port number*/
+    char *servIP;                  /* Server IP address (dotted quad) */
     int time_measure_mode;
     // int slash_index;
     char *URL; /* Entered URL */
     char *domain;
     char *subdirectory;
-    char *server_port;             /* Allows us to enter the server port number*/
-    char *servIP;                  /* Server IP address (dotted quad) */
-    char *echoString;              /* String to send to echo server */
-    char echoBuffer[RCVBUFSIZE];   /* Buffer for echo string */
-    unsigned int echoStringLen;    /* Length of string to echo */
     int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
     and total bytes read */
     int rc;
@@ -67,10 +66,6 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // if(27634) {
-    //     printf("Large number is printable");
-    // }
-
     // Parse our URL into domain and subdirectory
     if (subdirectory = strstr(URL, "/"))
     {
@@ -81,17 +76,6 @@ int main(int argc, char *argv[])
         domain = URL;
         subdirectory = "/";
     }
-    // printf("This works\n");
-    // printf("Domain: %s, Subdirectory: %s\n", domain, subdirectory);
-
-    // int character_index_1 = getCharacterIndex("Words", "o");
-    // int character_index_2 = getCharacterIndex("Mommy", "m");
-    // int character_index_3 = getCharacterIndex("Jacob", "c");
-
-    // printf(
-    //     "Character 1: %d\n"
-    //     "Character 2: %d\n"
-    //     "Character 3: %d\n", character_index_1, character_index_2, character_index_3);
 
     // Set up our address info structs
     struct addrinfo hints;
@@ -134,9 +118,6 @@ int main(int argc, char *argv[])
         // Convert number to IP address:
         struct in_addr addr = {p->ai_addr};
 
-        // Print IP address:
-        // printf("Socket:\n");
-        // printf("Address: %s, Length: %d\n", inet_ntoa(addr), p->ai_addrlen);
         break; // if we get here, we must have connected successfully
     }
 
@@ -152,12 +133,7 @@ int main(int argc, char *argv[])
     // char requestHostAddress[] = URL;
 
     // Make our request
-    sprintf(request,
-            "GET %s HTTP/1.1\r\n"
-            "Host: %s\r\n"
-            // "Content-Type: text/plain\r\n"
-            "\r\n",
-            subdirectory, domain);
+    sprintf(request, "GET %s HTTP/1.1\r\nHost: %s\r\n\r\n", subdirectory, domain);
 
     printf("%s", request);
 
@@ -175,7 +151,6 @@ int main(int argc, char *argv[])
         int elapsed_time = new_time - old_time;
         printf("RTT: %d\n", elapsed_time);
     }
-
 
     // Set up our response stuff
     int response_size = 1000;
@@ -200,17 +175,10 @@ void DieWithError(char *errorMessage)
     printf("\n");
 }
 
-void checkError(int rc) {
+void checkError(int rc)
+{
     if (rc == -1)
     {
         printf("Error Number: %d\n", errno);
     }
 }
-
-// int getCharacterIndex(char* string, char delim) {
-//     int index;
-
-//     delim = strchr(string, 'w');
-//     index = (int)(delim - string);
-//     return index;
-// }
