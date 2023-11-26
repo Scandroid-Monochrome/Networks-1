@@ -153,11 +153,12 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
 
             if (p_wanted_file != NULL) {
                 unsigned char current_line[1000];
-                
+
                 while (!feof(p_wanted_file)) {
                     fread(current_line, sizeof(current_line), 1000, p_wanted_file);
                     // Print the read data
                     printf("%s", current_line);
+                    send(clntSocket, current_line, 1000, 0);
                 }
                 fclose(p_wanted_file);
             } else {
