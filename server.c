@@ -5,6 +5,7 @@
 #include <string.h>     /* for memset() */
 #include <unistd.h>     /* for close() */
 #include <signal.h>
+#include <dirent.h>     /* for checking files */
 
 #define MAXPENDING 5 /* Maximum outstanding connection requests */
 #define BUFFER_SIZE 1024
@@ -74,18 +75,114 @@ void DieWithError(char *errorMessage)
 
 void HandleTCPClient(int clntSocket) /* TCP client handling function */
 {
+    printf("*********CAUGHT REQUEST:*********\n");
     char httpRequest[1000];
     // if HTTP request is good
     recv(clntSocket, httpRequest, 1000, 0);
     printf("HTTP Request:\n"
      "%s\n", httpRequest);
-    // WHAT separates an HTTP request/response from just text?
-    char buffer[1024] = "HTTP/1.1 200 OK\n";
+
+    // Error 404
+    char* error404 = "HTTP/1.1 404 Not Found\r\n\r\n<HTML>test</HTML>\n\n";
+
+    // Extract the file request from the HTTP request
+    char* parsed_HTTP = (char*)malloc(1000 * sizeof(char));
+    parsed_HTTP = strtok(httpRequest, " ");
+    char* subdirectory;
+    int counter = 0;
+    while(counter < 2) {
+        if (counter == 1) {
+            subdirectory = parsed_HTTP;
+        }
+        parsed_HTTP = strtok(NULL, " ");
+        counter += 1;
+    }
+
+    printf("Subdirectory: %s\n", subdirectory);
+    
     // if there is a file request:
-    // Find the file
-    // If file doesn't exist, send error 404
-    // handle bad HTTP request
+    if(strlen(subdirectory) > 1) {
+        char* collected_subdirectory = (char*)malloc(strlen(subdirectory)*sizeof(char));
+        char* last_item = (char*)malloc(strlen(subdirectory)*sizeof(char));
+        // Parse the file request into path and file
+        subdirectory = strtok(subdirectory, "/");
+
+        while(subdirectory != NULL) {
+            last_item = subdirectory;
+            subdirectory = strtok(NULL, "/");
+            if (subdirectory != NULL) {
+                strcat(collected_subdirectory, "/");
+                strcat(collected_subdirectory, last_item);
+            }
+        }
+
+        printf("Subdirectory: %s\n", collected_subdirectory);
+        printf("Item: %s\n", last_item);
+
+        // FIND OUR FILE
+        //Create stuff to find file
+        DIR *directory;
+        struct dirent *entry;
+
+        directory = (DIR*)malloc(50 * sizeof(DIR*));
+        directory = opendir(collected_subdirectory);
+
+        if (collected_subdirectory == NULL) {
+            send(clntSocket, error404, strlen(error404), 0);
+            printf("Error opening directory.\n");
+            return 1;
+        }
+
+        int is_there = 0;
+        printf("OUR ITEMS:\n[");
+        char* our_file;
+        while ((entry = readdir(directory)) != NULL) {
+            if(strcmp(entry->d_name, last_item) == 0) {
+                is_there = 1;
+                our_file = entry->d_name;
+            }
+            printf(entry->d_name);
+            printf(", ");
+        }
+
+        printf("]\n\n");
+
+        // If item exists
+        if (is_there) {
+            FILE* p_wanted_file = fopen(our_file, "r");
+
+            if (p_wanted_file != NULL) {
+                unsigned char current_line[1000];
+                
+                while (!feof(p_wanted_file)) {
+                    fread(current_line, sizeof(current_line), 1000, p_wanted_file);
+                    // Print the read data
+                    printf("%s", current_line);
+                }
+                fclose(p_wanted_file);
+            } else {
+                send(clntSocket, error404, strlen(error404), 0);
+            }
+        } else {
+            printf("Item not found.\n");
+        }
+
+        if (closedir(directory) == -1) {
+            printf("Error closing directory.\n");
+            return 1;
+        }
+        // Find the file
+        // If file doesn't exist, send error 404
+        // handle bad HTTP request
+        char buffer[1024] = "HTTP/1.1 200 OK\n";
+
+        // free(directory);
+        // free(entry);
+        free(collected_subdirectory);
+    }
+
     // Close connection and wait for the next one
     close(clntSocket);
+    printf("\n\n");
 }
 /* NOT REACHED */

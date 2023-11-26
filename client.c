@@ -135,7 +135,8 @@ int main(int argc, char *argv[])
     // Make our request
     sprintf(request, 
     "GET %s HTTP/1.1\r\n"
-    "Host: %s\r\n\r\n",
+    "Host: %s\r\n"
+    "\r\n",
      subdirectory, domain);
 
     printf("%s", request);
