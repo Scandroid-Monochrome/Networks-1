@@ -22,18 +22,17 @@ void checkError(int rc);
 int main(int argc, char *argv[])
 {
     int sock;                        /* Socket descriptor */
-    struct sockaddr_in echoServAddr; /* Echo server address */
-    unsigned short servPort;         /* Echo server port */
+    // struct sockaddr_in echoServAddr; /* Echo server address */
     char *server_port;             /* Allows us to enter the server port number*/
-    char *servIP;                  /* Server IP address (dotted quad) */
-    int time_measure_mode;
+    // char *servIP;                  /* Server IP address (dotted quad) */
     // int slash_index;
     char *URL; /* Entered URL */
     char *domain;
     char *subdirectory;
-    int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
-    and total bytes read */
+    // int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
+    // and total bytes read */
     int rc;
+    int time_measure_mode = 0;
 
     if (argc == 2)
     {
@@ -47,7 +46,7 @@ int main(int argc, char *argv[])
         // Ex: ./http_client server_url port_number
         URL = argv[1];
         server_port = argv[2];
-        time_measure_mode = 0;
+        // time_measure_mode = 0;
         ;
     }
     else if (argc == 4)
@@ -67,7 +66,8 @@ int main(int argc, char *argv[])
     }
 
     // Parse our URL into domain and subdirectory
-    if (subdirectory = strstr(URL, "/"))
+    subdirectory = strstr(URL, "/");
+    if (subdirectory != NULL)
     {
         domain = strndup(URL, subdirectory - URL);
     }
@@ -116,7 +116,7 @@ int main(int argc, char *argv[])
         }
 
         // Convert number to IP address:
-        struct in_addr addr = {p->ai_addr};
+        // struct in_addr addr = {p->ai_addr};
 
         break; // if we get here, we must have connected successfully
     }
@@ -149,7 +149,7 @@ int main(int argc, char *argv[])
     checkError(rc);
     printf("Request Length: %d\n", actual_length);
     // If we requested timer:
-    if (argc == 4)
+    if (time_measure_mode)
     {
         int new_time = clock();
         int elapsed_time = new_time - old_time;

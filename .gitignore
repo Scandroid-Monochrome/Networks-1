@@ -1,6 +1,4 @@
-echoclient
-echoserver
-http_client
-http_server
-http.server
 .vscode/
+client
+*.o
+*.exe
