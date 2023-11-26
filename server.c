@@ -12,6 +12,8 @@
 
 void DieWithError(char *errorMessage); /* Error handling function */
 void HandleTCPClient(int clntSocket);  /* TCP client handling function */
+void parse_path_file(char* full_path, char *directory, char *file_name);
+void sendFile(int client_socket, char* file_name);
 
 int main(int argc, char *argv[])
 {
@@ -79,7 +81,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
     char httpRequest[1000];
     // if HTTP request is good
     recv(clntSocket, httpRequest, 1000, 0);
-    printf("HTTP Request:\n"
+    printf("HTTP Request:\n",
      "%s\n", httpRequest);
 
     // Error 404
@@ -101,23 +103,13 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
     printf("Subdirectory: %s\n", subdirectory);
     
     // if there is a file request:
-    if(strlen(subdirectory) > 1) {
-        char* collected_subdirectory = (char*)malloc(strlen(subdirectory)*sizeof(char));
-        char* last_item = (char*)malloc(strlen(subdirectory)*sizeof(char));
-        // Parse the file request into path and file
-        subdirectory = strtok(subdirectory, "/");
+    if (strlen(subdirectory) > 1) {
+        char* path = (char*)malloc(strlen(subdirectory)*sizeof(char));
+        char* item = (char*)malloc(strlen(subdirectory)*sizeof(char));
+        parse_path_file(subdirectory, path, item);
 
-        while(subdirectory != NULL) {
-            last_item = subdirectory;
-            subdirectory = strtok(NULL, "/");
-            if (subdirectory != NULL) {
-                strcat(collected_subdirectory, "/");
-                strcat(collected_subdirectory, last_item);
-            }
-        }
-
-        printf("Subdirectory: %s\n", collected_subdirectory);
-        printf("Item: %s\n", last_item);
+        printf("Subdirectory: %s\n", path);
+        printf("Item: %s\n", item);
 
         // FIND OUR FILE
         //Create stuff to find file
@@ -125,9 +117,9 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         struct dirent *entry;
 
         directory = (DIR*)malloc(50 * sizeof(DIR*));
-        directory = opendir(collected_subdirectory);
+        directory = opendir(path);
 
-        if (collected_subdirectory == NULL) {
+        if (path == NULL) {
             send(clntSocket, error404, strlen(error404), 0);
             printf("Error opening directory.\n");
             exit(1);
@@ -137,7 +129,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         printf("OUR ITEMS:\n[");
         char* our_file;
         while ((entry = readdir(directory)) != NULL) {
-            if(strcmp(entry->d_name, last_item) == 0) {
+            if(strcmp(entry->d_name, item) == 0) {
                 is_there = 1;
                 our_file = entry->d_name;
             }
@@ -149,41 +141,70 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
 
         // If item exists
         if (is_there) {
-            FILE* p_wanted_file = fopen(our_file, "r");
-
-            if (p_wanted_file != NULL) {
-                unsigned char current_line[1000];
-
-                while (!feof(p_wanted_file)) {
-                    // char buffer[1024] = "HTTP/1.1 200 OK\n";
-                    fread(current_line, sizeof(current_line), 1000, p_wanted_file);
-                    // Print the read data
-                    printf("%s", current_line);
-                    send(clntSocket, current_line, 1000, 0);
-                }
-                fclose(p_wanted_file);
-            } else {
-                send(clntSocket, error404, strlen(error404), 0);
-            }
+            sendFile(clntSocket, our_file);
         } else {
             printf("Item not found.\n");
+            send(clntSocket, error404, strlen(error404), 0);
         }
 
         if (closedir(directory) == -1) {
             printf("Error closing directory.\n");
             exit(1);
         }
-        // Find the file
-        // If file doesn't exist, send error 404
-        // handle bad HTTP request
 
-        // free(directory);
-        // free(entry);
-        free(collected_subdirectory);
+        free(path);
     }
 
     // Close connection and wait for the next one
     close(clntSocket);
     printf("\n\n");
 }
-/* NOT REACHED */
+
+void parse_path_file(char* full_path, char *directory, char *file_name) {
+    // char* file_name_collecter;
+    // // Parse the file request into path and file
+    // full_path = strtok(full_path, "/");
+
+    // while(full_path != NULL) {
+    //     file_name = full_path;
+    //     full_path = strtok(NULL, "/");
+    //     if (full_path != NULL) {
+    //         strcat(directory, "/");
+    //         strcat(directory, file_name);
+    //     }
+    // }
+
+    int full_length = strlen(full_path);
+    int last_slash_index = -1;
+
+    for (int i = full_length; i >= 0; i--) {
+        if (full_path[i] == '/') {
+            last_slash_index = i;
+            break;
+        }
+    }
+
+    if (last_slash_index == -1) {
+        memcpy(directory, "", 0);
+        memcpy(file_name, full_path, full_length);
+    } else {
+        memcpy(directory, full_path, last_slash_index);
+        memcpy(file_name, full_path + last_slash_index + 1, full_length - last_slash_index + 1);
+    }
+}
+
+void sendFile(int client_socket, char* file_name) {
+    FILE* p_wanted_file = fopen(file_name, "r");
+
+    unsigned char current_line[1000];
+
+    while (!feof(p_wanted_file)) {
+        // char buffer[1024] = "HTTP/1.1 200 OK\n";
+        fread(current_line, sizeof(current_line), 1000, p_wanted_file);
+        // Print the read data
+        printf("%s", current_line);
+        send(client_socket, current_line, 1000, 0);
+    }
+    
+    fclose(p_wanted_file);
+}
