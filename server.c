@@ -69,11 +69,13 @@ int main(int argc, char *argv[])
         // For Ctrl C
         signal(SIGINT, SIG_DFL);
     }
+
+    close(servSock);
 }
 
 void DieWithError(char *errorMessage)
 {
-    printf(errorMessage);
+    printf("%s\n", errorMessage);
 }
 
 void HandleTCPClient(int clntSocket) /* TCP client handling function */
@@ -82,8 +84,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
     char httpRequest[1000];
     // if HTTP request is good
     recv(clntSocket, httpRequest, 1000, 0);
-    printf("HTTP Request:\n",
-     "%s\n", httpRequest);
+    printf("HTTP Request:\n%s\n", httpRequest);
 
     // Error 404
     char* error404 = "HTTP/1.1 404 Not Found\r\n\r\n<HTML>test</HTML>\n\n";
@@ -134,7 +135,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
                 is_there = 1;
                 our_file = entry->d_name;
             }
-            printf(entry->d_name);
+            printf("%s\n", entry->d_name);
             printf(", ");
         }
 
