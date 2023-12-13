@@ -9,6 +9,7 @@
 
 #define MAXPENDING 5 /* Maximum outstanding connection requests */
 #define BUFFER_SIZE 1024
+#define SEND_CHAR_SIZE 10000
 
 void DieWithError(char *errorMessage); /* Error handling function */
 void HandleTCPClient(int clntSocket);  /* TCP client handling function */
@@ -77,7 +78,7 @@ void DieWithError(char *errorMessage)
 
 void HandleTCPClient(int clntSocket) /* TCP client handling function */
 {
-    printf("*********CAUGHT REQUEST:*********\n");
+    // printf("*********CAUGHT REQUEST:*********\n");
     char httpRequest[1000];
     // if HTTP request is good
     recv(clntSocket, httpRequest, 1000, 0);
@@ -100,7 +101,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         counter += 1;
     }
 
-    printf("Subdirectory: %s\n", subdirectory);
+    // printf("Subdirectory: %s\n", subdirectory);
     
     // if there is a file request:
     if (strlen(subdirectory) > 1) {
@@ -108,8 +109,8 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         char* item = (char*)malloc(strlen(subdirectory)*sizeof(char));
         parse_path_file(subdirectory, path, item);
 
-        printf("Subdirectory: %s\n", path);
-        printf("Item: %s\n", item);
+        // printf("Subdirectory: %s\n", path);
+        // printf("Item: %s\n", item);
 
         // FIND OUR FILE
         //Create stuff to find file
@@ -143,7 +144,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         if (is_there) {
             sendFile(clntSocket, our_file);
         } else {
-            printf("Item not found.\n");
+            // printf("Item not found.\n");
             send(clntSocket, error404, strlen(error404), 0);
         }
 
@@ -153,6 +154,7 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
         }
 
         free(path);
+        free(item);
     }
 
     // Close connection and wait for the next one
@@ -161,19 +163,6 @@ void HandleTCPClient(int clntSocket) /* TCP client handling function */
 }
 
 void parse_path_file(char* full_path, char *directory, char *file_name) {
-    // char* file_name_collecter;
-    // // Parse the file request into path and file
-    // full_path = strtok(full_path, "/");
-
-    // while(full_path != NULL) {
-    //     file_name = full_path;
-    //     full_path = strtok(NULL, "/");
-    //     if (full_path != NULL) {
-    //         strcat(directory, "/");
-    //         strcat(directory, file_name);
-    //     }
-    // }
-
     int full_length = strlen(full_path);
     int last_slash_index = -1;
 
@@ -195,15 +184,23 @@ void parse_path_file(char* full_path, char *directory, char *file_name) {
 
 void sendFile(int client_socket, char* file_name) {
     FILE* p_wanted_file = fopen(file_name, "r");
+    // unsigned char current_line[SEND_CHAR_SIZE];
 
-    unsigned char current_line[1000];
-
+    // while (fread(current_line, sizeof(current_line), SEND_CHAR_SIZE, p_wanted_file) != 0) {
+    int counter = 1;
     while (!feof(p_wanted_file)) {
+        unsigned char current_line[SEND_CHAR_SIZE];
+        fread(current_line, 1, SEND_CHAR_SIZE, p_wanted_file);
+
+        printf("Packet No. %d\n", counter);
         // char buffer[1024] = "HTTP/1.1 200 OK\n";
-        fread(current_line, sizeof(current_line), 1000, p_wanted_file);
+        // printf("Okay until here.\n");
         // Print the read data
-        printf("%s", current_line);
-        send(client_socket, current_line, 1000, 0);
+        // printf("%s", current_line);
+        // printf("Okay until here.\n");
+        send(client_socket, current_line, SEND_CHAR_SIZE, 0);
+        // printf("Okay until here.\n");
+        counter++;
     }
     
     fclose(p_wanted_file);

@@ -15,6 +15,7 @@
 // #include <find.hpp>
 
 #define RCVBUFSIZE 32                  /* Size of receive buffer */
+#define RESPONSE_SIZE 10000
 
 void DieWithError(char *errorMessage); /* Error handling function */
 void checkError(int rc);
@@ -29,7 +30,7 @@ int main(int argc, char *argv[])
     char *URL; /* Entered URL */
     char *domain;
     char *subdirectory;
-    // int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
+    int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
     // and total bytes read */
     int rc;
     int time_measure_mode = 0;
@@ -157,14 +158,19 @@ int main(int argc, char *argv[])
     }
 
     // Set up our response stuff
-    int response_size = 1000;
-    char response[1000];
+    int response_size = RESPONSE_SIZE;
+    char response[RESPONSE_SIZE];
 
     // Receive response
-    rc = recv(sock, response, response_size, 0);
-    checkError(rc);
-    printf("Response length: %d\n", rc);
-    printf("Response: %s\n", response);
+    rc = response_size;
+    while (1) {
+        rc = recv(sock, response, response_size, 0);
+        // checkError(rc);
+        
+        printf("**LO%sOL**", response);
+        printf("\nResponse length: %d\n", rc);
+
+    }
 
     freeaddrinfo(servinfo); // all done with this structure
 
