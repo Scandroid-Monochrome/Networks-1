@@ -30,38 +30,28 @@ int main(int argc, char *argv[])
     char *URL; /* Entered URL */
     char *domain;
     char *subdirectory;
-    int bytesRcvd, totalBytesRcvd; /* Bytes read in single recv()
     // and total bytes read */
     int rc;
     int time_measure_mode = 0;
 
     if (argc == 2)
     {
-        // printf("args: 2\n");
         URL = argv[1];
         server_port = "80";
+        printf("args: 2; URL=%s\n", URL);
     }
     else if (argc == 3)
     {
-        // printf("args: 3\n");
         // Ex: ./http_client server_url port_number
         URL = argv[1];
         server_port = argv[2];
         // time_measure_mode = 0;
-        ;
+        printf("args: 3; URL=%s server_port=%s\n", URL, server_port);
     }
-    else if (argc == 4)
-    {
-        // printf("args: 4\n");
-        // Ex: ./http_client [-options] server_url port_number
-        URL = argv[2];
-        server_port = argv[3];
-        time_measure_mode = 1;
-    }
-    else /*if ((argc > 1) || (argc < 5))*/ /* Test for correct number of arguments */
+    else
     {
         // printf("args: N/A\n");
-        fprintf(stderr, "Usage: %s <Server IP> <Echo Word> [<Echo Port>]\n",
+        fprintf(stderr, "Usage: %s <Server IP>/<File Path> [<Server Port>]\n",
                 argv[0]);
         exit(1);
     }
@@ -162,15 +152,11 @@ int main(int argc, char *argv[])
     char response[RESPONSE_SIZE];
 
     // Receive response
-    rc = response_size;
-    while (1) {
-        rc = recv(sock, response, response_size, 0);
-        // checkError(rc);
-        
-        printf("**LO%sOL**", response);
-        printf("\nResponse length: %d\n", rc);
-
-    }
+    rc = recv(sock, response, response_size, 0);
+    // checkError(rc);
+    
+    printf("**LO%sOL**", response);
+    printf("\nResponse length: %d\n", rc);
 
     freeaddrinfo(servinfo); // all done with this structure
 
@@ -181,7 +167,7 @@ int main(int argc, char *argv[])
 
 void DieWithError(char *errorMessage)
 {
-    printf(errorMessage);
+    printf("%s\n", errorMessage);
     printf("\n");
 }
 
