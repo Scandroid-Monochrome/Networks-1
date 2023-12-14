@@ -152,11 +152,17 @@ int main(int argc, char *argv[])
     char response[RESPONSE_SIZE];
 
     // Receive response
-    rc = recv(sock, response, response_size, 0);
+    int bytes_read;
+    int total_bytes = 0;
+    while ((bytes_read = recv(sock, response, response_size, 0)) > 0) {
+        total_bytes += bytes_read;
+        printf("%s", response);
+
+    }
     // checkError(rc);
     
-    printf("**LO%sOL**", response);
-    printf("\nResponse length: %d\n", rc);
+    printf("\n");
+    printf("\nResponse length: %d\n", total_bytes);
 
     freeaddrinfo(servinfo); // all done with this structure
 

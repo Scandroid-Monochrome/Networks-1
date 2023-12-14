@@ -191,7 +191,7 @@ void sendFile(int client_socket, char* file_name) {
     int counter = 1;
     while (!feof(p_wanted_file)) {
         unsigned char current_line[SEND_CHAR_SIZE];
-        fread(current_line, 1, SEND_CHAR_SIZE, p_wanted_file);
+        int bytes_read = fread(current_line, 1, SEND_CHAR_SIZE, p_wanted_file);
 
         printf("Packet No. %d\n", counter);
         // char buffer[1024] = "HTTP/1.1 200 OK\n";
@@ -199,7 +199,7 @@ void sendFile(int client_socket, char* file_name) {
         // Print the read data
         // printf("%s", current_line);
         // printf("Okay until here.\n");
-        send(client_socket, current_line, SEND_CHAR_SIZE, 0);
+        send(client_socket, current_line, bytes_read, 0);
         // printf("Okay until here.\n");
         counter++;
     }
