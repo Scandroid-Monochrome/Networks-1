@@ -156,8 +156,13 @@ int main(int argc, char *argv[])
     int total_bytes = 0;
     while ((bytes_read = recv(sock, response, response_size, 0)) > 0) {
         total_bytes += bytes_read;
-        printf("%s", response);
-
+        for (int i=0; i< bytes_read; i++) {
+            int ch = response[i];
+            // only keep printable ASCII characters plus a few white space characters
+            if ((ch >= ' ' && ch <= '~') || ch == '\t' || ch == '\r' || ch == '\n') {
+                printf("%c", ch);
+            }
+        }
     }
     // checkError(rc);
     
